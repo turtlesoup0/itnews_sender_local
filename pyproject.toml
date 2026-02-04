@@ -1,0 +1,45 @@
+[project]
+name = "itnews-sender"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "boto3",
+    "beautifulsoup4",
+    "lxml",
+    "playwright",
+    "pymupdf",
+    "pypdf",
+    "python-dotenv",
+    "reportlab",
+    "requests",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short --strict-markers"
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "characterization: Characterization tests for existing behavior"
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/venv/*",
+    "*/__pycache__/*"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:"
+]

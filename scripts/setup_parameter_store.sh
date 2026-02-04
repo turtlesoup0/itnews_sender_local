@@ -15,41 +15,41 @@ echo ""
 # 1. 수신거부 Function URL
 echo "[1/3] 수신거부 Function URL 등록..."
 aws ssm put-parameter \
-  --name "/etnews/unsubscribe-function-url" \
+  --name "/news/unsubscribe-function-url" \
   --value "https://heswdvaag57hgz3ugvxk6ifqpq0ukhog.lambda-url.ap-northeast-2.on.aws" \
   --type "String" \
   --description "수신거부 Lambda Function URL" \
   --region $REGION \
   --overwrite
 
-echo "✅ 등록 완료: /etnews/unsubscribe-function-url"
+echo "✅ 등록 완료: /news/unsubscribe-function-url"
 echo ""
 
 # 2. 관리자 이메일
 echo "[2/3] 관리자 이메일 등록..."
 aws ssm put-parameter \
-  --name "/etnews/admin-email" \
-  --value "turtlesoup0@gmail.com" \
+  --name "/news/admin-email" \
+  --value "admin@example.com" \
   --type "String" \
   --description "관리자 알림 수신 이메일" \
   --region $REGION \
   --overwrite
 
-echo "✅ 등록 완료: /etnews/admin-email"
+echo "✅ 등록 완료: /news/admin-email"
 echo ""
 
 # 3. 수신거부 Secret (SecureString)
 echo "[3/3] 수신거부 Secret 생성 및 등록..."
 SECRET=$(openssl rand -base64 32)
 aws ssm put-parameter \
-  --name "/etnews/unsubscribe-secret" \
+  --name "/news/unsubscribe-secret" \
   --value "$SECRET" \
   --type "SecureString" \
   --description "수신거부 HMAC Secret Key" \
   --region $REGION \
   --overwrite
 
-echo "✅ 등록 완료: /etnews/unsubscribe-secret"
+echo "✅ 등록 완료: /news/unsubscribe-secret"
 echo "   생성된 Secret: $SECRET"
 echo ""
 
@@ -59,7 +59,7 @@ echo "==================================================="
 echo ""
 echo "등록된 Parameters 확인:"
 aws ssm get-parameters \
-  --names "/etnews/unsubscribe-function-url" "/etnews/admin-email" "/etnews/unsubscribe-secret" \
+  --names "/news/unsubscribe-function-url" "/news/admin-email" "/news/unsubscribe-secret" \
   --with-decryption \
   --region $REGION \
   --query "Parameters[*].[Name,Value,Type]" \

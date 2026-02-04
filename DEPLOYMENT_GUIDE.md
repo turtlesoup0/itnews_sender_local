@@ -40,11 +40,11 @@ bash scripts/setup_aws_resources.sh
 ```bash
 aws dynamodb create-table \
   --region ap-northeast-2 \
-  --table-name etnews-delivery-failures \
+  --table-name news-delivery-failures \
   --attribute-definitions AttributeName=date,AttributeType=S \
   --key-schema AttributeName=date,KeyType=HASH \
   --billing-mode PAY_PER_REQUEST \
-  --tags Key=Project,Value=etnews-pdf-sender Key=Purpose,Value=failure-tracking
+  --tags Key=Project,Value=news-pdf-sender Key=Purpose,Value=failure-tracking
 ```
 
 **EventBridge 스케줄 설정**:
@@ -52,14 +52,14 @@ aws dynamodb create-table \
 # Lambda ARN 조회
 LAMBDA_ARN=$(aws lambda get-function \
   --region ap-northeast-2 \
-  --function-name etnews-pdf-sender \
+  --function-name news-pdf-sender \
   --query 'Configuration.FunctionArn' \
   --output text)
 
 # OPR 모드로 정기 실행 설정
 aws events put-targets \
   --region ap-northeast-2 \
-  --rule etnews-daily-trigger \
+  --rule news-daily-trigger \
   --targets "Id=1,Arn=${LAMBDA_ARN},Input={\"mode\":\"opr\"}"
 ```
 
@@ -68,7 +68,7 @@ aws events put-targets \
 ### 3단계: Lambda IAM 권한 추가
 
 **AWS Console 방법**:
-1. Lambda → `etnews-pdf-sender` → 구성 → 권한
+1. Lambda → `news-pdf-sender` → 구성 → 권한
 2. 실행 역할 클릭 (IAM 콘솔로 이동)
 3. "권한 추가" → "인라인 정책 생성"
 4. JSON 탭 선택 후 다음 정책 붙여넣기:
@@ -85,13 +85,13 @@ aws events put-targets \
         "dynamodb:UpdateItem",
         "dynamodb:DeleteItem"
       ],
-      "Resource": "arn:aws:dynamodb:ap-northeast-2:*:table/etnews-delivery-failures"
+      "Resource": "arn:aws:dynamodb:ap-northeast-2:*:table/news-delivery-failures"
     }
   ]
 }
 ```
 
-5. 정책 이름: `etnews-delivery-failures-access`
+5. 정책 이름: `news-delivery-failures-access`
 6. "정책 생성" 클릭
 
 **AWS CLI 방법**:
@@ -99,14 +99,14 @@ aws events put-targets \
 # Lambda 실행 역할 이름 조회
 ROLE_NAME=$(aws lambda get-function \
   --region ap-northeast-2 \
-  --function-name etnews-pdf-sender \
+  --function-name news-pdf-sender \
   --query 'Configuration.Role' \
   --output text | awk -F'/' '{print $NF}')
 
 # 인라인 정책 추가
 aws iam put-role-policy \
   --role-name ${ROLE_NAME} \
-  --policy-name etnews-delivery-failures-access \
+  --policy-name news-delivery-failures-access \
   --policy-document '{
     "Version": "2012-10-17",
     "Statement": [
@@ -118,7 +118,7 @@ aws iam put-role-policy \
           "dynamodb:UpdateItem",
           "dynamodb:DeleteItem"
         ],
-        "Resource": "arn:aws:dynamodb:ap-northeast-2:*:table/etnews-delivery-failures"
+        "Resource": "arn:aws:dynamodb:ap-northeast-2:*:table/news-delivery-failures"
       }
     ]
   }'
@@ -133,19 +133,19 @@ aws iam put-role-policy \
 ```bash
 # TEST 모드로 실행
 aws lambda invoke \
-  --function-name etnews-pdf-sender \
+  --function-name news-pdf-sender \
   --region ap-northeast-2 \
   --payload '{}' \
   response.json
 
 # 로그 확인
-aws logs tail /aws/lambda/etnews-pdf-sender --follow --region ap-northeast-2
+aws logs tail /aws/lambda/news-pdf-sender --follow --region ap-northeast-2
 ```
 
 **검증 항목**:
 - ✅ "🧪 TEST 모드로 실행" 로그 확인
-- ✅ turtlesoup0@gmail.com에게만 메일 수신
-- ✅ DynamoDB `etnews-recipients`의 `last_delivery_date` 업데이트 안 됨
+- ✅ admin@example.com에게만 메일 수신
+- ✅ DynamoDB `news-recipients`의 `last_delivery_date` 업데이트 안 됨
 
 #### 4-2. TEST 모드 중복 실행 (안전성 확인)
 
@@ -154,7 +154,7 @@ aws logs tail /aws/lambda/etnews-pdf-sender --follow --region ap-northeast-2
 for i in {1..3}; do
   echo "실행 $i"
   aws lambda invoke \
-    --function-name etnews-pdf-sender \
+    --function-name news-pdf-sender \
     --region ap-northeast-2 \
     --payload '{}' \
     response_$i.json
@@ -163,7 +163,7 @@ done
 ```
 
 **검증**:
-- ✅ turtlesoup0@gmail.com에 3통 메일 수신 (중복 방지 안 됨 = 정상)
+- ✅ admin@example.com에 3통 메일 수신 (중복 방지 안 됨 = 정상)
 - ✅ 발송 이력 미기록으로 매번 발송됨
 
 #### 4-3. OPR 모드 안전 검증 (신중히)
@@ -178,13 +178,13 @@ python scripts/manage_recipients.py set-all-delivered-today
 ```bash
 # ⚠️ 주의: 중복 방지 로직이 동작하면 메일 발송 안 됨
 aws lambda invoke \
-  --function-name etnews-pdf-sender \
+  --function-name news-pdf-sender \
   --region ap-northeast-2 \
   --payload '{"mode": "opr"}' \
   response_opr.json
 
 # 로그 확인
-aws logs tail /aws/lambda/etnews-pdf-sender --region ap-northeast-2
+aws logs tail /aws/lambda/news-pdf-sender --region ap-northeast-2
 ```
 
 **검증**:
@@ -202,13 +202,13 @@ aws logs tail /aws/lambda/etnews-pdf-sender --region ap-northeast-2
 ```bash
 # 현재 환경변수 백업
 aws lambda get-function-configuration \
-  --function-name etnews-pdf-sender \
+  --function-name news-pdf-sender \
   --region ap-northeast-2 \
   --query 'Environment.Variables' > env_backup.json
 
 # 잘못된 자격증명으로 변경 (실패 유도)
 aws lambda update-function-configuration \
-  --function-name etnews-pdf-sender \
+  --function-name news-pdf-sender \
   --region ap-northeast-2 \
   --environment "Variables={ETNEWS_USER_ID=wrong_user,ETNEWS_PASSWORD=wrong_pass,...}"
 
@@ -220,7 +220,7 @@ aws lambda update-function-configuration \
 for i in {1..3}; do
   echo "실패 테스트 $i"
   aws lambda invoke \
-    --function-name etnews-pdf-sender \
+    --function-name news-pdf-sender \
     --region ap-northeast-2 \
     --payload '{}' \
     response_fail_$i.json
@@ -232,21 +232,21 @@ done
 ```bash
 # 실패 카운트 확인
 aws dynamodb get-item \
-  --table-name etnews-delivery-failures \
+  --table-name news-delivery-failures \
   --key '{"date": {"S": "2026-01-27"}}' \
   --region ap-northeast-2
 ```
 
 **검증**:
 - ✅ DynamoDB에 `failure_count=3` 기록됨
-- ✅ 3회째 실패 후 turtlesoup0@gmail.com에 관리자 알림 메일 수신
+- ✅ 3회째 실패 후 admin@example.com에 관리자 알림 메일 수신
 - ✅ 4회째 실행 시 "오늘 3회 이상 실패하여 건너뜁니다" 로그
 
 **환경변수 복원**:
 ```bash
 # 백업한 환경변수로 복원
 aws lambda update-function-configuration \
-  --function-name etnews-pdf-sender \
+  --function-name news-pdf-sender \
   --region ap-northeast-2 \
   --environment "Variables={...}"  # env_backup.json 내용 사용
 ```
@@ -259,7 +259,7 @@ aws lambda update-function-configuration \
 # 타겟 설정 확인
 aws events list-targets-by-rule \
   --region ap-northeast-2 \
-  --rule etnews-daily-trigger
+  --rule news-daily-trigger
 
 # Input 필드에 {"mode":"opr"} 확인
 ```
@@ -270,7 +270,7 @@ aws events list-targets-by-rule \
   "Targets": [
     {
       "Id": "1",
-      "Arn": "arn:aws:lambda:ap-northeast-2:...:function:etnews-pdf-sender",
+      "Arn": "arn:aws:lambda:ap-northeast-2:...:function:news-pdf-sender",
       "Input": "{\"mode\":\"opr\"}"
     }
   ]
@@ -288,12 +288,12 @@ aws events list-targets-by-rule \
 ```bash
 # 이전 버전 확인
 aws lambda list-versions-by-function \
-  --function-name etnews-pdf-sender \
+  --function-name news-pdf-sender \
   --region ap-northeast-2
 
 # 특정 버전으로 롤백 (예: 버전 3)
 aws lambda update-alias \
-  --function-name etnews-pdf-sender \
+  --function-name news-pdf-sender \
   --name LIVE \
   --function-version 3 \
   --region ap-northeast-2
@@ -305,7 +305,7 @@ aws lambda update-alias \
 # Input 제거 (파라미터 없이 실행)
 aws events put-targets \
   --region ap-northeast-2 \
-  --rule etnews-daily-trigger \
+  --rule news-daily-trigger \
   --targets "Id=1,Arn=<Lambda ARN>"
 ```
 
@@ -347,7 +347,7 @@ for i in {0..6}; do
   DATE=$(date -v-${i}d +%Y-%m-%d)
   echo "===== $DATE ====="
   aws dynamodb get-item \
-    --table-name etnews-delivery-failures \
+    --table-name news-delivery-failures \
     --key "{\"date\": {\"S\": \"$DATE\"}}" \
     --region ap-northeast-2 \
     --query 'Item.[failure_count.N, last_error.S]' \
@@ -372,7 +372,7 @@ done
 - 수동 리셋 필요 시:
   ```bash
   aws dynamodb delete-item \
-    --table-name etnews-delivery-failures \
+    --table-name news-delivery-failures \
     --key '{"date": {"S": "2026-01-27"}}' \
     --region ap-northeast-2
   ```
@@ -402,12 +402,12 @@ done
 ```bash
 # Lambda 함수 버전 확인
 aws lambda get-function \
-  --function-name etnews-pdf-sender \
+  --function-name news-pdf-sender \
   --region ap-northeast-2 \
   --query 'Configuration.[FunctionArn,LastModified,CodeSha256]'
 
 # 로그에서 모드 확인
-aws logs tail /aws/lambda/etnews-pdf-sender --region ap-northeast-2 | grep "모드"
+aws logs tail /aws/lambda/news-pdf-sender --region ap-northeast-2 | grep "모드"
 ```
 
 ### 문제 3: 실패 추적이 동작하지 않음
@@ -418,11 +418,11 @@ aws logs tail /aws/lambda/etnews-pdf-sender --region ap-northeast-2 | grep "모�
 ```bash
 # 테이블 존재 확인
 aws dynamodb describe-table \
-  --table-name etnews-delivery-failures \
+  --table-name news-delivery-failures \
   --region ap-northeast-2
 
 # 로그에서 오류 확인
-aws logs tail /aws/lambda/etnews-pdf-sender --region ap-northeast-2 | grep "failure"
+aws logs tail /aws/lambda/news-pdf-sender --region ap-northeast-2 | grep "failure"
 ```
 
 ---

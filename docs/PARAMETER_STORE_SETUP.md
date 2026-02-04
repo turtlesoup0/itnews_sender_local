@@ -24,7 +24,7 @@ export AWS_PROFILE=admin
 ### 1.1 수신거부 Function URL
 ```bash
 aws ssm put-parameter \
-  --name "/etnews/unsubscribe-function-url" \
+  --name "/news/unsubscribe-function-url" \
   --value "https://heswdvaag57hgz3ugvxk6ifqpq0ukhog.lambda-url.ap-northeast-2.on.aws" \
   --type "String" \
   --description "수신거부 Lambda Function URL" \
@@ -34,8 +34,8 @@ aws ssm put-parameter \
 ### 1.2 관리자 이메일
 ```bash
 aws ssm put-parameter \
-  --name "/etnews/admin-email" \
-  --value "turtlesoup0@gmail.com" \
+  --name "/news/admin-email" \
+  --value "admin@example.com" \
   --type "String" \
   --description "관리자 알림 수신 이메일" \
   --region ap-northeast-2
@@ -45,7 +45,7 @@ aws ssm put-parameter \
 ```bash
 # Option A: Parameter Store (SecureString)
 aws ssm put-parameter \
-  --name "/etnews/unsubscribe-secret" \
+  --name "/news/unsubscribe-secret" \
   --value "$(openssl rand -base64 32)" \
   --type "SecureString" \
   --description "수신거부 HMAC Secret Key" \
@@ -59,7 +59,7 @@ aws secretsmanager create-secret \
   --region ap-northeast-2
 ```
 
-## 2. 기존 `/etnews/credentials` 확인
+## 2. 기존 `/news/credentials` 확인
 
 현재 구조:
 ```json
@@ -87,7 +87,7 @@ aws secretsmanager create-secret \
         "ssm:GetParameter"
       ],
       "Resource": [
-        "arn:aws:ssm:ap-northeast-2:269809345127:parameter/etnews/*"
+        "arn:aws:ssm:ap-northeast-2:269809345127:parameter/news/*"
       ]
     },
     {

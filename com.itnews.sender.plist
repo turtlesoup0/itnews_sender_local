@@ -8,7 +8,7 @@
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>/Users/turtlesoup0-macmini/Projects/itnews_sender/scripts/launchd_runner.sh</string>
+        <string>/Users/your-username/Projects/itnews_sender/scripts/launchd_runner.sh</string>
         <string>--mode</string>
         <string>opr</string>
     </array>
@@ -56,11 +56,11 @@
         </dict>
     </array>
     <key>StandardOutPath</key>
-    <string>/Users/turtlesoup0-macmini/Projects/itnews_sender/logs/launchd_stdout.log</string>
+    <string>/Users/your-username/Projects/itnews_sender/logs/launchd_stdout.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/turtlesoup0-macmini/Projects/itnews_sender/logs/launchd_stderr.log</string>
+    <string>/Users/your-username/Projects/itnews_sender/logs/launchd_stderr.log</string>
     <key>WorkingDirectory</key>
-    <string>/Users/turtlesoup0-macmini/Projects/itnews_sender</string>
+    <string>/Users/your-username/Projects/itnews_sender</string>
     <key>EnvironmentVariables</key>
     <dict>
         <key>TZ</key>

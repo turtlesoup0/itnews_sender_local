@@ -6,7 +6,7 @@ AWS Lambda 기반 etnews/itfind 뉴스레터 발송 시스템의 **주 실행 �
 AWS 인프라는 **백업 수단으로 유지**하되 EventBridge 스케줄만 비활성화한다.
 코드가 양쪽 환경에서 모두 동작하도록 **스토리지 추상화 레이어**를 도입한다.
 
-**베이스 디렉토리**: `/Users/turtlesoup0-macmini/Documents/itnews_sender`
+**베이스 디렉토리**: `/path/to/project`
 
 ---
 
@@ -199,7 +199,7 @@ lambda_handler.py (AWS)  ──┤
 **백업 실행 방법** (Mac Mini 장애 시):
 ```bash
 # 1. EventBridge 다시 활성화
-aws events enable-rule --name etnews-daily-trigger --region ap-northeast-2
+aws events enable-rule --name news-daily-trigger --region ap-northeast-2
 
 # 2. 또는 수동 Lambda 호출
 aws lambda invoke --function-name etnews-pdf-sender \
@@ -645,8 +645,8 @@ if __name__ == '__main__':
     <string>com.itnews.sender</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/turtlesoup0-macmini/Documents/itnews_sender/venv/bin/python3</string>
-        <string>/Users/turtlesoup0-macmini/Documents/itnews_sender/run_daily.py</string>
+        <string>/path/to/project/venv/bin/python3</string>
+        <string>/path/to/project/run_daily.py</string>
         <string>--mode</string>
         <string>opr</string>
     </array>
@@ -658,11 +658,11 @@ if __name__ == '__main__':
         <integer>0</integer>
     </dict>
     <key>StandardOutPath</key>
-    <string>/Users/turtlesoup0-macmini/Documents/itnews_sender/logs/launchd_stdout.log</string>
+    <string>/path/to/project/logs/launchd_stdout.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/turtlesoup0-macmini/Documents/itnews_sender/logs/launchd_stderr.log</string>
+    <string>/path/to/project/logs/launchd_stderr.log</string>
     <key>WorkingDirectory</key>
-    <string>/Users/turtlesoup0-macmini/Documents/itnews_sender</string>
+    <string>/path/to/project</string>
     <key>EnvironmentVariables</key>
     <dict>
         <key>TZ</key>
@@ -937,7 +937,7 @@ R-3 (email_workflow 활용)       ← 독립
 ```bash
 # AWS Lambda에 재배포 후 기존 동작 확인
 ./scripts/test_lambda.sh test skip-idempotency
-# turtlesoup0@gmail.com 수신 확인
+# admin@example.com 수신 확인
 ```
 
 ### Phase 1 테스트
@@ -973,7 +973,7 @@ python lambda_itfind_downloader.py
 python run_daily.py --mode test --skip-idempotency
 
 # 확인사항:
-# - turtlesoup0@gmail.com 에 etnews PDF 수신
+# - admin@example.com 에 news PDF 수신
 # - 수요일이면 ITFIND PDF 별도 수신
 # - SQLite DB 파일 생성 확인: data/itnews_sender.db
 # - 로그 파일 생성 확인: logs/itnews_sender.log
@@ -994,7 +994,7 @@ python run_daily.py --mode test  # "이미 실행됨" 확인
 #### 7. OPR 모드 전환 (최종)
 ```bash
 # 1. EventBridge 비활성화
-aws events disable-rule --name etnews-daily-trigger --region ap-northeast-2
+aws events disable-rule --name news-daily-trigger --region ap-northeast-2
 
 # 2. launchd 등록
 ./scripts/setup_launchd.sh install
@@ -1011,7 +1011,7 @@ aws events disable-rule --name etnews-daily-trigger --region ap-northeast-2
 
 ```bash
 # 1. AWS EventBridge 재활성화
-aws events enable-rule --name etnews-daily-trigger --region ap-northeast-2
+aws events enable-rule --name news-daily-trigger --region ap-northeast-2
 
 # 2. 또는 수동 Lambda 호출 (당일 미발송인 경우)
 aws lambda invoke --function-name etnews-pdf-sender \
@@ -1025,7 +1025,7 @@ cat /tmp/result.json
 
 ```bash
 # 1. EventBridge 다시 비활성화
-aws events disable-rule --name etnews-daily-trigger --region ap-northeast-2
+aws events disable-rule --name news-daily-trigger --region ap-northeast-2
 
 # 2. 수신인 동기화 (수신거부 반영)
 python scripts/migrate_dynamodb_to_sqlite.py --sync
@@ -1055,10 +1055,10 @@ python scripts/migrate_dynamodb_to_sqlite.py --sync
     python3 --version
 
 [ ] 프로젝트 디렉토리 확인
-    ls /Users/turtlesoup0-macmini/Documents/itnews_sender
+    ls /path/to/project
 
 [ ] Git 저장소 상태 확인 (clean working tree)
-    cd /Users/turtlesoup0-macmini/Documents/itnews_sender
+    cd /path/to/project
     git status
 
 [ ] .env 파일 존재 및 credential 설정 확인

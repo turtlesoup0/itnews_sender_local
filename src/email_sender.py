@@ -126,7 +126,7 @@ class EmailSender:
         Args:
             pdf_path: 전송할 PDF 파일 경로 (전자신문)
             subject: 이메일 제목 (None이면 자동 생성)
-            test_mode: True면 turtlesoup0@gmail.com에게만 발송 (테스트용)
+            test_mode: True면 admin@example.com에게만 발송 (테스트용)
             itfind_pdf_path: ITFIND 주간기술동향 PDF 경로 (수요일만, Optional)
             itfind_info: ITFIND 주간기술동향 정보 (Optional)
 
@@ -403,7 +403,7 @@ class EmailSender:
                     <p>이 이메일은 자동으로 발송되었습니다.</p>
                     <p style="color: #666; font-size: 0.9em;">
                         이 서비스는 오픈소스 프로젝트로 운영됩니다:
-                        <a href="https://github.com/turtlesoup0/itnews_sender" style="color: #0066cc;">GitHub 프로젝트 보기</a>
+                        <a href="https://github.com/your-username/your-repo" style="color: #0066cc;">GitHub 프로젝트 보기</a>
                     </p>
                     <hr>
                     <small>
@@ -438,7 +438,7 @@ class EmailSender:
                     <p>이 이메일은 자동으로 발송되었습니다.</p>
                     <p style="color: #666; font-size: 0.9em;">
                         이 서비스는 오픈소스 프로젝트로 운영됩니다:
-                        <a href="https://github.com/turtlesoup0/itnews_sender" style="color: #0066cc;">GitHub 프로젝트 보기</a>
+                        <a href="https://github.com/your-username/your-repo" style="color: #0066cc;">GitHub 프로젝트 보기</a>
                     </p>
                     <hr>
                     <small>
@@ -576,7 +576,7 @@ def send_pdf_bulk_email(
     Args:
         pdf_path: 전송할 PDF 파일 경로 (전자신문)
         subject: 이메일 제목
-        test_mode: True면 테스트 모드 (turtlesoup0@gmail.com에게만 발송)
+        test_mode: True면 테스트 모드 (admin@example.com에게만 발송)
         itfind_pdf_path: ITFIND 주간기술동향 PDF 경로 (수요일만, Optional)
         itfind_info: ITFIND 주간기술동향 정보 (Optional)
 

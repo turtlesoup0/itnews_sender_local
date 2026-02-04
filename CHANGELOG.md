@@ -90,5 +90,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/turtlesoup0/itnews_sender/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/turtlesoup0/itnews_sender/releases/tag/v1.0.0
+[Unreleased]: https://github.com/your-username/your-repo/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/your-username/your-repo/releases/tag/v1.0.0

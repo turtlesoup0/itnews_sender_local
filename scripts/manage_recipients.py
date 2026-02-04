@@ -86,10 +86,10 @@ def cmd_init(manager):
 
     # 초기 수신인 목록
     initial_recipients = [
-        ("turtlesoup0@gmail.com", "관리자"),
-        ("jjemoya@naver.com", "수신인1"),
-        ("coolobj1.pe@gmail.com", "수신인2"),
-        ("nalza10@naver.com", "수신인3"),
+        ("admin@example.com", "관리자"),
+        ("user1@example.com", "수신인1"),
+        ("user2@example.com", "수신인2"),
+        ("user3@example.com", "수신인3"),
     ]
 
     result = manager.bulk_add_recipients(initial_recipients)

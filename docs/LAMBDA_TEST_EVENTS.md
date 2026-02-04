@@ -55,7 +55,7 @@
 - 목적: ITFIND 다운로드 로직 여러 번 테스트
 - 이벤트: `{"mode": "test", "skip_idempotency": true}`
 - DynamoDB 기록 안 함
-- 여러 번 실행 가능 (turtlesoup0@gmail.com에게만 발송)
+- 여러 번 실행 가능 (admin@example.com에게만 발송)
 
 ### 중복 발송 테스트
 1. 첫 실행: `{"mode": "test"}` → 성공

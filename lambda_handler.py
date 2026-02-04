@@ -68,7 +68,7 @@ def handler(event, context):
     skip_idempotency = event.get("skip_idempotency", False)
 
     if is_test_mode:
-        logger.info("🧪 TEST 모드로 실행 (수신인: turtlesoup0@gmail.com)")
+        logger.info("🧪 TEST 모드로 실행 (수신인: ***@***.***)")
     else:
         logger.info("🚀 OPR 모드로 실행 (수신인: DynamoDB 활성 수신인 전체)")
 

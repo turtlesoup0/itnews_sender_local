@@ -1,0 +1,181 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 환경변수 및 설정
+.env
+local.settings.json
+
+# Azure Functions
+.venv/
+.python_packages/
+__blobstorage__/
+__queuestorage__/
+__azurite_db*__.json
+.vscode/
+
+# 임시 파일
+*.pdf
+temp/
+tmp/
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 로그
+*.log
+debug/
+
+# 로컬 데이터
+data/
+!data/.gitkeep
+logs/
+!logs/.gitkeep
+
+# 백업 및 레거시
+archive/
+*.backup
+*.bak
+.github/workflows/
+.coverage
+# Private keys (specific patterns to avoid false positives)
+# Virtual Environments
+*.njsproj
+# Secrets and Credentials (CRITICAL)
+*.secret.*
+.next/
+.claude/settings.local.*.json
+# Skill-specific credentials
+.uv_cache/
+.claude/skills/*/.env*
+*.tmp
+*.sublime-workspace
+# Purpose: Essential patterns for user projects
+htmlcov/
+ehthumbs.db
+# Updated: 2026-01-10
+*.backup/
+*_secret=*
+.mypy_cache/
+# IDE & Editors
+# Deployment & CI/CD
+*.temp
+.claude/.env.local*
+.pytest_cache/
+.tscache/
+.netlify/
+.vercel/
+dist-ssr/
+*.dbm
+.turbo/
+.Spotlight-V100
+# Build Artifacts & Distribution
+*_secret.*
+.fseventsd
+# Cloud provider credentials
+# Logs & Temporary Files
+.TemporaryItems
+*.pyd
+.claude/plans/
+*_token=*
+# Credential patterns in environment files
+*.rdb
+.VolumeIcon.icns
+# ============================================
+*.sw?
+# Linux
+.aws/credentials
+secret-key-*
+# Claude Code Configuration
+.DocumentRevisions-V100
+*.db
+*.suo
+*.pyc
+.directory
+*.pyo
+*.key.*
+*-key.*
+# Environment files
+.claude/settings.local.json
+.env/
+!.env.example
+coverage.json
+# FIXED: Issue #237 - Replaced overly broad *key* and *secret* patterns
+*-secret.*
+.ruff_cache/
+private-key*
+*.pfx
+out/
+# Certificate files
+# Test Coverage
+.aws/config
+.LSOverride
+.claude/skills/*/secrets/
+secret-*.*
+*.sublime-project
+# OS Files
+# Python Cache & Bytecode
+.uv-cache/
+*.pem
+*.tsbuildinfo
+*.p12
+# ===========================================
+.cursor/
+# Version: 0.33.0
+.claude/local/
+*-secret-key.*
+# Build Tools & Frameworks
+# Backups
+node_modules/
+*.jks
+# Windows
+*.sqlite3
+.nuxt/
+*.sln
+.claude/skills/*/*/*key*
+.moai-backups/
+api-key-*
+*_key.*
+.#*
+*.sqlite
+.AppleDouble
+.Trashes
+# MoAI-ADK Package Distribution .gitignore
+.firebase/
+*-api-key.*
+.claude/skills/*/*/*token*
+*_backup_*/
+[Dd]esktop.ini
+# Node.js (for docs/Nextra)
+.env.*
+.claude/skills/*/*/*secret*
+# Mac
+*-backup/

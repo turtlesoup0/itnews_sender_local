@@ -2,10 +2,14 @@
 name: moai-workflow-ddd
 description: >
   Domain-Driven Development workflow specialist using ANALYZE-PRESERVE-IMPROVE
-  cycle for behavior-preserving code transformation
+  cycle for behavior-preserving code transformation.
+  Use when refactoring legacy code, improving code structure without functional changes,
+  reducing technical debt, or performing API migration with behavior preservation.
+  Do NOT use for writing new tests (use moai-workflow-testing instead)
+  or creating new features from scratch (use expert-backend or expert-frontend instead).
 license: Apache-2.0
 compatibility: Designed for Claude Code
-allowed-tools: Read Write Edit Bash Grep Glob mcp__context7__resolve-library-id mcp__context7__get-library-docs
+allowed-tools: Read Write Edit Bash(git:*) Bash(pytest:*) Bash(ruff:*) Bash(npm:*) Bash(npx:*) Bash(node:*) Bash(uv:*) Bash(make:*) Bash(cargo:*) Bash(go:*) Bash(mix:*) Bash(bundle:*) Grep Glob mcp__context7__resolve-library-id mcp__context7__get-library-docs
 user-invocable: false
 metadata:
   version: "1.0.0"
@@ -21,6 +25,23 @@ metadata:
 ---
 
 # Domain-Driven Development (DDD) Workflow
+
+## Development Mode Configuration (CRITICAL)
+
+[NOTE] This workflow is selected based on `.moai/config/sections/quality.yaml`:
+
+```yaml
+constitution:
+  development_mode: ddd    # or tdd
+```
+
+**When to use this workflow**:
+- `development_mode: ddd` → Use DDD (this workflow)
+- `development_mode: tdd` → Use TDD instead (moai-workflow-tdd)
+
+**Key distinction**:
+- **DDD**: Characterization-test-first for existing codebases with minimal test coverage
+- **TDD** (default): Test-first development for all work, including brownfield projects with pre-RED analysis
 
 ## Quick Reference
 
@@ -62,7 +83,7 @@ This makes DDD a superset of TDD - it includes TDD's test-first approach while a
 
 ### DDD vs TDD Comparison
 
-DDD Approach (for new features):
+TDD Approach (for new features):
 
 - Cycle: RED-GREEN-REFACTOR
 - Goal: Create new functionality through tests

@@ -9,7 +9,7 @@ All instruction documents must be in English:
 - Agent definitions (.claude/agents/**/*.md)
 - Slash commands (.claude/commands/**/*.md)
 - Skill definitions (.claude/skills/**/*.md)
-- Hook scripts (.claude/hooks/**/*.py)
+- Hook scripts (.claude/hooks/**/*.py, *.sh)
 - Configuration files (.moai/config/**/*.yaml)
 
 User-facing documentation may use multiple languages:
@@ -47,9 +47,7 @@ Use paths frontmatter for conditional rule loading:
 
 ```yaml
 ---
-paths:
-  - "**/*.py"
-  - "**/pyproject.toml"
+paths: "**/*.py,**/pyproject.toml"
 ---
 ```
 

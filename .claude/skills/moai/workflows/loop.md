@@ -1,3 +1,31 @@
+---
+name: moai-workflow-loop
+description: >
+  Iterative autonomous fixing workflow that scans, fixes, verifies, and
+  repeats until all issues are resolved or max iterations reached.
+  Includes memory pressure detection and snapshot-based resume.
+  Use when iterative error resolution or continuous fixing is needed.
+user-invocable: false
+metadata:
+  version: "2.5.0"
+  category: "workflow"
+  status: "active"
+  updated: "2026-02-21"
+  tags: "loop, iterative, auto-fix, diagnostics, testing, coverage"
+
+# MoAI Extension: Progressive Disclosure
+progressive_disclosure:
+  enabled: true
+  level1_tokens: 100
+  level2_tokens: 5000
+
+# MoAI Extension: Triggers
+triggers:
+  keywords: ["loop", "iterate", "repeat", "until done", "keep fixing", "all errors"]
+  agents: ["expert-debug", "expert-backend", "expert-frontend", "expert-testing"]
+  phases: ["loop"]
+---
+
 # Workflow: Loop - Iterative Autonomous Fixing
 
 Purpose: Iterative autonomous fixing until all issues resolved. AI scans, fixes, verifies, and repeats until completion conditions met or max iterations reached.
@@ -7,7 +35,7 @@ Flow: Check Completion -> Memory Check -> Diagnose -> Fix -> Verify -> Repeat
 ## Supported Flags
 
 - --max N (alias --max-iterations): Maximum iteration count (default 100)
-- --auto (alias --auto-fix): Enable auto-fix (default Level 1)
+- --auto-fix: Enable auto-fix (default Level 1)
 - --sequential (alias --seq): Sequential diagnostics instead of parallel
 - --errors (alias --errors-only): Fix errors only, skip warnings
 - --coverage (alias --include-coverage): Include coverage threshold (default 85%)
@@ -20,14 +48,14 @@ Each iteration executes the following steps in order:
 
 Step 1 - Completion Check:
 - Check for completion marker in previous iteration response
-- Marker types: `<moai>DONE</moai>`, `<moai>COMPLETE</moai>`, `<moai:done />`
+- Marker types: `<moai>DONE</moai>`, `<moai>COMPLETE</moai>`
 - If marker found: Exit loop with success
 
 Step 2 - Memory Pressure Check (if --memory-check enabled):
 - Calculate session duration from start time
 - Monitor iteration time for GC pressure signs (doubling iteration time)
 - If session duration exceeds 25 minutes OR iteration time doubling:
-  - Save proactive checkpoint to .moai/cache/ralph-snapshots/memory-pressure.json
+  - Save proactive checkpoint to $CLAUDE_PROJECT_DIR/.moai/cache/loop-snapshots/memory-pressure.json
   - Warn user about memory pressure
   - Suggest resuming with /moai:loop --resume memory-pressure
 - If memory-safe limit reached (50 iterations): Exit with checkpoint
@@ -46,6 +74,7 @@ If --sequential flag: Run LSP, then AST-grep, then Tests, then Coverage sequenti
 Step 4 - Completion Condition Check:
 - Conditions: Zero errors AND all tests passing AND coverage meets threshold
 - If all conditions met: Prompt user to add completion marker or continue
+- If only coverage below target (zero errors + tests passing): Auto-route to coverage workflow (workflows/coverage.md) for intelligent gap analysis and test generation instead of blind looping. Coverage workflow identifies P1-P4 priority gaps and generates targeted tests.
 
 Step 5 - Task Generation:
 - [HARD] TaskCreate for all newly discovered issues with pending status
@@ -70,8 +99,18 @@ Fix levels applied per --auto setting:
 Step 7 - Verification:
 - [HARD] After each fix: TaskUpdate to change item to completed
 
+Step 7.5 - MX Tag Check:
+- After fixes applied, scan modified files for MX tag requirements
+- Add missing tags for modified functions:
+  - New exported functions: Add @MX:NOTE or @MX:ANCHOR if fan_in >= 3
+  - Dangerous patterns introduced: Add @MX:WARN with @MX:REASON
+  - Unresolved issues: Keep @MX:TODO
+- Remove resolved @MX:TODO tags for fixed issues
+- Generate MX_TAG_REPORT with tags added/removed/updated
+- See @.claude/rules/moai/workflow/mx-tag-protocol.md for tag rules
+
 Step 8 - Snapshot Save:
-- Save iteration snapshot to .moai/cache/ralph-snapshots/
+- Save iteration snapshot to $CLAUDE_PROJECT_DIR/.moai/cache/loop-snapshots/
 - Increment iteration counter
 
 Step 9 - Repeat or Exit:
@@ -87,16 +126,46 @@ The loop exits when any of these conditions are met:
 - Memory pressure threshold exceeded (saves checkpoint)
 - User interruption (state auto-saved)
 
+Pre-exit clean sweep (when exiting with success):
+- Before final report, run clean workflow (workflows/clean.md) scan on all modified files
+- Remove dead code exposed by fixes (unused imports, orphaned functions)
+- Skip if no dead code detected or if --errors flag was set
+
+## MX Tag Integration
+
+Each iteration includes MX tag management:
+
+**Tag Updates During Loop:**
+- Fix resolves an issue: Remove corresponding @MX:TODO
+- Fix introduces new code: Add appropriate @MX tags
+- Fix changes function signature: Re-evaluate @MX:ANCHOR
+- Fix adds complexity: Add @MX:WARN if threshold exceeded
+
+**Tag Types for Fixes:**
+| Fix Type | MX Action |
+|----------|-----------|
+| Bug fix (resolved) | Remove @MX:TODO |
+| New function added | Add @MX:NOTE or @MX:ANCHOR |
+| Refactoring | Update @MX:NOTE, check ANCHOR |
+| Security fix | Add @MX:NOTE with security context |
+
+**MX Tag Report:**
+After each iteration, include MX_TAG_REPORT section:
+- Tags Added: List new tags with file:line
+- Tags Removed: List resolved TODOs
+- Tags Updated: List modified tags
+- Attention Required: WARN tags requiring review
+
 ## Snapshot Management
 
-Snapshot location: .moai/cache/ralph-snapshots/
+Snapshot location: $CLAUDE_PROJECT_DIR/.moai/cache/loop-snapshots/
 
 Files:
 - iteration-001.json, iteration-002.json, etc. (per-iteration snapshots)
 - latest.json (symlink to most recent)
 - memory-pressure.json (proactive checkpoint on memory pressure)
 
-Loop state file: .moai/cache/.moai_loop_state.json
+Loop state file: $CLAUDE_PROJECT_DIR/.moai/cache/.moai_loop_state.json
 
 Resume commands:
 - /moai:loop --resume latest
@@ -116,9 +185,16 @@ Language detection: pyproject.toml (Python), package.json (TypeScript/JavaScript
 
 Send any message to interrupt the loop. State is automatically saved via session_end hook.
 
+## Safe Development Protocol
+
+All fixes within the loop follow CLAUDE.md Section 7 Safe Development Protocol:
+- Reproduction-first: Write failing tests before fixing bugs
+- Post-fix review: List potential side effects after each fix cycle
+- Maximum 3 retries per individual operation (per CLAUDE.md constitution)
+
 ## Execution Summary
 
-1. Parse arguments (extract flags: --max, --auto, --sequential, --errors, --coverage, --memory-check, --resume)
+1. Parse arguments (extract flags: --max, --auto-fix, --sequential, --errors, --coverage, --memory-check, --resume)
 2. If --resume: Load state from specified snapshot and continue
 3. Detect project language from indicator files
 4. Initialize iteration counter and memory tracking (start time)
@@ -128,5 +204,5 @@ Send any message to interrupt the loop. State is automatically saved via session
 
 ---
 
-Version: 1.0.0
+Version: 2.0.0
 Source: loop.md command v2.2.0

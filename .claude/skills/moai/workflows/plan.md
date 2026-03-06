@@ -1,8 +1,38 @@
+---
+name: moai-workflow-plan
+description: >
+  Creates comprehensive SPEC documents using EARS format as the first step
+  of the Plan-Run-Sync workflow. Handles project exploration, SPEC file
+  generation, validation, and optional Git environment setup with worktree
+  or branch creation. Use when planning features or creating specifications.
+user-invocable: false
+metadata:
+  version: "2.6.0"
+  category: "workflow"
+  status: "active"
+  updated: "2026-02-23"
+  tags: "plan, spec, ears, requirements, specification, design"
+
+# MoAI Extension: Progressive Disclosure
+progressive_disclosure:
+  enabled: true
+  level1_tokens: 100
+  level2_tokens: 5000
+
+# MoAI Extension: Triggers
+triggers:
+  keywords: ["plan", "spec", "design", "architect", "requirements", "feature request"]
+  agents: ["manager-spec", "Explore", "manager-git"]
+  phases: ["plan"]
+---
+
 # Plan Workflow Orchestration
 
 ## Purpose
 
-Create comprehensive SPEC documents using EARS format as the first step of the Plan-Run-Sync workflow. This workflow handles everything from project exploration to SPEC file generation and optional Git environment setup.
+Create comprehensive SPEC documents using EARS format as the first step of the Plan-Run-Sync workflow.
+
+For phase overview and token budgets, see: @.claude/rules/moai/workflow/spec-workflow.md
 
 ## Scope
 
@@ -21,6 +51,7 @@ Create comprehensive SPEC documents using EARS format as the first step of the P
 - --worktree: Create isolated Git worktree environment (highest priority)
 - --branch: Create traditional feature branch (second priority)
 - No flag: SPEC only by default; user may be prompted based on config
+- --team: Enable team-based exploration (see team/plan.md for parallel research team)
 - resume SPEC-XXX: Continue from last saved draft state
 
 Flag priority: --worktree takes precedence over --branch, which takes precedence over default.
@@ -35,6 +66,7 @@ Before execution, load these essential files:
 - .moai/project/product.md (product context)
 - .moai/project/structure.md (architecture context)
 - .moai/project/tech.md (technology context)
+- .moai/project/codemaps/ directory listing (architecture maps for existing codebase understanding)
 - .moai/specs/ directory listing (existing SPECs for deduplication)
 
 Pre-execution commands: git status, git branch, git log, git diff, find .moai/specs.
@@ -48,23 +80,58 @@ Pre-execution commands: git status, git branch, git log, git diff, find .moai/sp
 Agent: Explore subagent (read-only codebase analysis)
 
 When to run:
-
 - User provides vague or unstructured request
 - Need to discover existing files and patterns
 - Unclear about current project state
 
 When to skip:
-
 - User provides clear SPEC title (e.g., "Add authentication module")
 - Resume scenario with existing SPEC context
 
 Tasks for the Explore subagent:
-
+- If .moai/project/codemaps/ exists: Use as architecture baseline to accelerate exploration
 - Find relevant files by keywords from user request
 - Locate existing SPEC documents in .moai/specs/
 - Identify implementation patterns and dependencies
 - Discover project configuration files
+- Read target directories in depth — understand deeply how each module works, its intricacies and side effects
+- Study cross-module interactions in great detail — trace data flow through the system
+- Go through related test files to understand expected behavior and edge cases
 - Report comprehensive results for Phase 1B context
+
+### Phase 0.5: Deep Research (Recommended)
+
+Agent: Explore subagent (deep codebase analysis)
+
+Purpose: Produce a persistent research.md artifact documenting deep codebase understanding. This document serves as a verification surface — MoAI and the user can review it and correct misunderstandings before planning begins.
+
+When to run:
+- Feature involves modifying existing code
+- Feature has cross-module dependencies
+- User explicitly requests research phase
+
+When to skip:
+- Simple, isolated additions (new file with no dependencies)
+- User provides explicit "skip research" instruction
+
+Tasks for the Explore subagent:
+- Read target code areas in depth — understand how they work deeply, their intricacies and specificities
+- Study related systems in great detail — trace data flow, identify implicit contracts and side effects
+- Discover reference implementations in the existing codebase — find similar patterns that can guide the new implementation
+- Search for relevant open-source examples or documented patterns that align with the project's conventions
+- Document all findings in a structured research.md file
+
+Research directives (Deep Reading patterns):
+- Use language that demands thoroughness: "read deeply", "study in great detail", "understand the intricacies"
+- Avoid surface-level scanning — agent must trace through actual execution paths
+- Every finding must include specific file paths and line references
+
+Output: `.moai/specs/SPEC-{ID}/research.md` containing:
+- Architecture analysis with file paths and dependency maps
+- Existing patterns and conventions discovered
+- Reference implementations found (internal codebase or documented patterns)
+- Risks, constraints, and implicit contracts identified
+- Recommendations for the implementation approach
 
 ### Phase 1B: SPEC Planning (Required)
 
@@ -73,50 +140,69 @@ Agent: manager-spec subagent
 Input: User request plus Phase 1A results (if executed)
 
 Tasks for manager-spec:
-
 - Analyze project documents (product.md, structure.md, tech.md)
 - Propose 1-3 SPEC candidates with proper naming
 - Check for duplicate SPECs in .moai/specs/
 - Design EARS structure for each candidate
 - Create implementation plan with technical constraints
 - Identify library versions (production stable only, no beta/alpha)
+- Search for reference implementations: Identify similar patterns in the existing codebase or well-documented approaches that can guide implementation
+- When reference implementations are found, include them in the plan as "Reference: {file_path}:{line_range}" to improve implementation quality
 
 Output: Implementation plan with SPEC candidates, EARS structure, and technical constraints.
 
-### Decision Point 1: SPEC Creation Approval
+Implementation guard: [HARD] During Phases 0.5, 1A, and 1B, all agent prompts MUST include the instruction: "DO NOT write implementation code. Focus exclusively on research, analysis, and planning." This separation of thinking and typing is the foundation of effective AI-assisted development.
+
+### Decision Point 1: Plan Review and Annotation Cycle
 
 Tool: AskUserQuestion (at orchestrator level only)
 
 Options:
-
-- Proceed with SPEC Creation
-- Request Plan Modification
-- Save as Draft
-- Cancel
+- Proceed with SPEC Creation (Recommended): Plan is approved, continue to Phase 1.5 then Phase 2
+- Annotate Plan: Add inline notes to plan.md for revision (starts annotation cycle)
+- Save as Draft: Save plan.md with status draft, create commit, print resume command, exit
+- Cancel: Discard plan, exit with no files created
 
 If "Proceed": Continue to Phase 1.5 then Phase 2.
-If "Modify": Collect feedback, re-run Phase 1B with feedback context.
+If "Annotate": Enter Annotation Cycle (see below).
 If "Draft": Save plan.md with status draft, create commit, print resume command, exit.
 If "Cancel": Discard plan, exit with no files created.
+
+#### Annotation Cycle (1-6 iterations)
+
+Purpose: Allow users to iteratively refine the plan through inline notes before any code is written. This prevents expensive failures by catching architectural misunderstandings, missed conventions, and scope issues early.
+
+Process:
+1. User reviews plan.md (and research.md if available) in their editor
+2. User adds inline notes directly into the document (e.g., "NOTE: use drizzle:generate for migrations, not raw SQL")
+3. User signals completion via AskUserQuestion
+4. MoAI delegates to manager-spec subagent: "Address all inline notes in the plan document and update it accordingly. DO NOT implement any code."
+5. manager-spec updates plan.md, removing addressed notes and incorporating feedback
+6. MoAI presents updated plan to user for another review cycle
+
+Iteration limits:
+- Maximum 6 annotation cycles per plan
+- After each cycle, present options: Proceed / Annotate Again / Save Draft / Cancel
+- Track iteration count and display: "Annotation cycle {N}/6"
+
+Guard rule: [HARD] During annotation cycles, the explicit instruction "DO NOT implement any code — only update the plan document" MUST be included in every agent prompt. This prevents premature code generation.
 
 ### Phase 1.5: Pre-Creation Validation Gate
 
 Purpose: Prevent common SPEC creation errors before file generation.
 
 Step 1 - Document Type Classification:
-
 - Detect keywords to classify as SPEC, Report, or Documentation
 - Reports route to .moai/reports/, Documentation to .moai/docs/
 - Only SPEC-type content proceeds to Phase 2
 
 Step 2 - SPEC ID Validation (all checks must pass):
-
 - ID Format: Must match SPEC-{DOMAIN}-{NUMBER} pattern (e.g., SPEC-AUTH-001)
 - Domain Name: Must be from the approved domain list (AUTH, API, UI, DB, REFACTOR, FIX, UPDATE, PERF, TEST, DOCS, INFRA, DEVOPS, SECURITY, and others)
 - ID Uniqueness: Search .moai/specs/ to confirm no duplicates exist
 - Directory Structure: Must create directory, never flat files
 
-Composite domain rules: Maximum 2 domains recommended (e.g., UPDATE-REFACTOR-001), maximum 3 allowed.
+Composite domain rules: Maximum 2 domains recommended, maximum 3 allowed.
 
 ### Phase 2: SPEC Document Creation
 
@@ -143,7 +229,6 @@ File generation (all three files created simultaneously):
   - Performance and quality gate criteria
 
 Quality constraints:
-
 - Requirement modules limited to 5 or fewer per SPEC
 - Acceptance criteria minimum 2 Given/When/Then scenarios
 - Technical terms and function names remain in English
@@ -151,7 +236,6 @@ Quality constraints:
 ### Phase 3: Git Environment Setup (Conditional)
 
 Execution conditions: Phase 2 completed successfully AND one of the following:
-
 - --worktree flag provided
 - --branch flag provided or user chose branch creation
 - Configuration permits branch creation (git_strategy settings)
@@ -161,7 +245,6 @@ Skipped when: develop_direct workflow, no flags and user chooses "Use current br
 #### Worktree Path (--worktree flag)
 
 Prerequisite: SPEC files MUST be committed before worktree creation.
-
 - Stage SPEC files: git add .moai/specs/SPEC-{ID}/
 - Create commit: feat(spec): Add SPEC-{ID} - {title}
 - Create worktree via WorktreeManager with branch feature/SPEC-{ID}
@@ -170,7 +253,6 @@ Prerequisite: SPEC files MUST be committed before worktree creation.
 #### Branch Path (--branch flag or user choice)
 
 Agent: manager-git subagent
-
 - Create branch: feature/SPEC-{ID}-{description}
 - Set tracking upstream if remote exists
 - Switch to new branch
@@ -181,12 +263,25 @@ Agent: manager-git subagent
 - No branch creation, no manager-git invocation
 - SPEC files remain on current branch
 
+### Phase 3.5: MX Tag Planning (Optional)
+
+Purpose: Identify code locations that will need @MX annotations during implementation.
+
+Execution conditions: SPEC involves modifying existing code OR creating new public APIs.
+
+Tasks:
+- Scan target files for high fan_in functions (potential @MX:ANCHOR)
+- Identify dangerous patterns (goroutines, complexity) for @MX:WARN
+- List magic constants and business rules for @MX:NOTE
+- Document MX tag strategy in plan.md
+
+Skip conditions: New feature with no existing code interaction.
+
 ### Decision Point 2: Development Environment Selection
 
 Tool: AskUserQuestion (when prompt_always config is true and auto_branch is true)
 
 Options:
-
 - Create Worktree (recommended for parallel SPEC development)
 - Create Branch (traditional workflow)
 - Use current branch
@@ -196,10 +291,23 @@ Options:
 Tool: AskUserQuestion (after SPEC creation completes)
 
 Options:
-
 - Start Implementation (execute /moai run SPEC-{ID})
 - Modify Plan
 - Add New Feature (create additional SPEC)
+
+---
+
+## Team Mode Routing
+
+When --team flag is provided or auto-selected, the plan phase MUST switch to team orchestration:
+
+1. Verify prerequisites: workflow.team.enabled == true AND CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 env var is set
+2. If prerequisites met: Read team/plan.md and execute the team workflow (TeamCreate with researcher + analyst + architect)
+3. If prerequisites NOT met: Warn user then fallback to standard sub-agent mode (manager-spec)
+
+Team composition: researcher (haiku) + analyst (inherit) + architect (inherit)
+
+For detailed team orchestration steps, see team/plan.md.
 
 ---
 
@@ -219,5 +327,5 @@ All of the following must be verified:
 
 ---
 
-Version: 1.0.0
-Source: Extracted from .claude/commands/moai/1-plan.md v5.1.0
+Version: 2.6.0
+Updated: 2026-02-23

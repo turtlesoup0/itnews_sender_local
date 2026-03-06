@@ -9,19 +9,10 @@ description: |
   JA: リファクタリング, 再構造化, コードモード, 変換, API移行, 一括変更, 大規模変更, AST検索, 構造検索
   ZH: 重构, 重组, 代码模式, 转换, API迁移, 批量重命名, 大规模变更, AST搜索, 结构搜索
 tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
-model: inherit
+model: opus
 permissionMode: default
-skills: [moai-tool-ast-grep, moai-workflow-testing, moai-foundation-quality]
-hooks:
-  PostToolUse:
-    - matcher: "Write|Edit"
-      hooks:
-        - type: command
-          command: "/bin/zsh -l -c 'export PATH=$HOME/.local/bin:$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$PATH; uv run \"$CLAUDE_PROJECT_DIR/.claude/hooks/moai/post_tool__lsp_diagnostic.py\"'"
-          timeout: 30
-        - type: command
-          command: "/bin/zsh -l -c 'export PATH=$HOME/.local/bin:$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$PATH; uv run \"$CLAUDE_PROJECT_DIR/.claude/hooks/moai/post_tool__linter.py\"'"
-          timeout: 30
+memory: project
+skills: moai-foundation-claude, moai-foundation-core, moai-foundation-quality, moai-tool-ast-grep, moai-workflow-testing, moai-workflow-ddd
 ---
 
 # Expert Refactoring Agent
@@ -126,7 +117,7 @@ Delegate TO:
 - expert-security: If security patterns need review
 
 Receive FROM:
-- Alfred: Large-scale transformation requests
+- MoAI: Large-scale transformation requests
 - expert-backend/frontend: Domain-specific refactoring needs
 - manager-quality: Code quality improvement tasks
 

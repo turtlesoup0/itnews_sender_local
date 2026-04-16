@@ -47,6 +47,10 @@ class ConfigClass:
     SMTP_MAX_RETRIES = 3  # SMTP 전송 최대 재시도 횟수
     SMTP_RETRY_DELAY = 1  # SMTP 재시도 대기 시간 (초)
 
+    # [S2] 벌크 전송 최적화 설정
+    SMTP_CONSECUTIVE_FAIL_LIMIT = 5  # 연속 실패 허용치 (초과 시 루프 조기 중단)
+    SMTP_RECONNECT_EVERY = 50        # 연결 재오픈 주기 (Gmail 단일 연결 100통 한계 대비)
+
     # ITFIND 컨텐츠 신선도 설정
     ITFIND_STALENESS_DAYS = 6  # ITFIND 주간기술동향 컨텐츠 신선도 임계값 (일)
 

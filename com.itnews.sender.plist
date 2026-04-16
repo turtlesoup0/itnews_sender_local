@@ -55,10 +55,13 @@
             <integer>0</integer>
         </dict>
     </array>
-    <key>StandardOutPath</key>
-    <string>/Users/turtlesoup0-macmini/Projects/itnews_sender/logs/launchd_stdout.log</string>
-    <key>StandardErrorPath</key>
-    <string>/Users/turtlesoup0-macmini/Projects/itnews_sender/logs/launchd_stderr.log</string>
+    <!--
+      [S5] StandardOutPath / StandardErrorPath 는 제거되었다.
+      launchd_runner.sh 가 실행 초반에 stdout/stderr 를 월별 파일
+      (logs/launchd_YYYYMM.log) 로 직접 리디렉션하고, 90일 초과 파일을
+      자동 prune 한다. 이전 launchd_stderr.log / launchd_stdout.log 는
+      legacy 로 남겨두고 필요 시 수동 삭제 가능.
+    -->
     <key>WorkingDirectory</key>
     <string>/Users/turtlesoup0-macmini/Projects/itnews_sender</string>
     <key>EnvironmentVariables</key>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.itnews.sender.cleanup</string>
+    <!--
+      system Python + PYTHONPATH 로 venv site-packages 를 참조 (기존 launchd_runner.sh 와 동일한 전략)
+      scripts/gmail_cleanup.py 내부에서 src.config.load_dotenv() 가 .env 를 자동 로드한다.
+    -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Library/Developer/CommandLineTools/usr/bin/python3</string>
+        <string>/Users/turtlesoup0-macmini/Projects/itnews_sender/scripts/gmail_cleanup.py</string>
+    </array>
+    <!--
+      매월 1일 새벽 03:10 KST 실행.
+      주간 발송 스케줄(월~금 07:00)과 겹치지 않는 시간대.
+    -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Day</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>3</integer>
+        <key>Minute</key>
+        <integer>10</integer>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/Users/turtlesoup0-macmini/Projects/itnews_sender/logs/cleanup_stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/turtlesoup0-macmini/Projects/itnews_sender/logs/cleanup_stderr.log</string>
+    <key>WorkingDirectory</key>
+    <string>/Users/turtlesoup0-macmini/Projects/itnews_sender</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>TZ</key>
+        <string>Asia/Seoul</string>
+        <key>RETENTION_DAYS</key>
+        <string>7</string>
+        <key>PYTHONPATH</key>
+        <string>/Users/turtlesoup0-macmini/Projects/itnews_sender/venv/lib/python3.9/site-packages:/Users/turtlesoup0-macmini/Projects/itnews_sender</string>
+    </dict>
+</dict>
+</plist>

@@ -717,7 +717,17 @@ def extract_streamdocs_id_from_detail_page(detail_id: str) -> Optional[str]:
         session = requests.Session()
         response = session.get(streamdocs_regi_url, headers=headers, timeout=30, allow_redirects=True)
 
-        # JavaScript 리다이렉트 URL 추출
+        # 0단계: 서버 302 리다이렉트 체인 대응 (2026-07 사이트 변경)
+        # ITFIND가 JS location.href 대신 서버 302 체인을 사용하도록 바뀌면서,
+        # requests(allow_redirects=True)가 이미 최종 StreamDocs 뷰어 URL까지 따라간다.
+        # 최종 URL에 streamdocsId가 있으면 바로 추출 (JS 경로보다 우선).
+        url_match = re.search(r'streamdocsId=([A-Za-z0-9_-]+)', response.url)
+        if url_match:
+            streamdocs_id = url_match.group(1)
+            logger.info(f"✅ StreamDocs ID 추출 성공 (리다이렉트 최종 URL): {streamdocs_id}")
+            return streamdocs_id
+
+        # JavaScript 리다이렉트 URL 추출 (구 방식 하위호환 fallback)
         # 패턴: top.location.href="https://www.itfind.or.kr/publication/.../view.do?..."
         js_redirect_match = re.search(r'location\.href\s*=\s*["\']([^"\']+)["\']', response.text)
 

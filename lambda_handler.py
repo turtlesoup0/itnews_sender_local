@@ -29,16 +29,20 @@ logger = logging.getLogger(__name__)
 structured_logger = get_structured_logger(__name__)
 
 
-def is_wednesday() -> bool:
+def is_itfind_day() -> bool:
     """
-    오늘이 수요일인지 확인 (KST 기준)
+    오늘이 ITFIND 주간기술동향 다운로드 요일(목요일)인지 확인 (KST 기준)
+
+    주간기술동향은 격주 수요일 발행되지만, 발행 당일 07:00에는 RSS/StreamDocs
+    자료 게시가 완료되지 않는 경우가 있어(2215·2216호 누락 사례) 발행 다음 날인
+    목요일에 다운로드를 시도한다.
 
     Returns:
-        bool: 수요일이면 True
+        bool: 목요일이면 True
     """
     kst = timezone(timedelta(hours=9))
     now_kst = datetime.now(kst)
-    return now_kst.weekday() == 2  # 0=월요일, 2=수요일
+    return now_kst.weekday() == 3  # 0=월요일, 3=목요일
 
 
 def handler(event, context):
@@ -150,7 +154,7 @@ def handler(event, context):
             # PDF 다운로드 실패 (워크플로우에서 이미 알림 처리됨)
             raise
 
-        # 2-1. 수요일이면 ITFIND 주간기술동향 다운로드
+        # 2-1. 목요일이면 ITFIND 주간기술동향 다운로드 (발행 다음 날, 자료 게시 완료 후)
         itfind_pdf_path = None
         itfind_trend_info = None
 
@@ -162,8 +166,8 @@ def handler(event, context):
             f"현재 시각 - UTC: {now_utc.strftime('%Y-%m-%d %H:%M:%S %Z')}, KST: {now_kst.strftime('%Y-%m-%d %H:%M:%S %Z')}, weekday: {now_kst.weekday()}"
         )
 
-        if is_wednesday():
-            logger.info("📅 오늘은 수요일 - ITFIND 주간기술동향 다운로드 시도")
+        if is_itfind_day():
+            logger.info("📅 오늘은 목요일 - ITFIND 주간기술동향 다운로드 시도")
             try:
                 itfind_pdf_path, itfind_trend_info = download_itfind_pdf()
             except Exception as itfind_error:
@@ -177,7 +181,7 @@ def handler(event, context):
                 itfind_pdf_path = None
                 itfind_trend_info = None
         else:
-            logger.info("📅 오늘은 수요일이 아님 - ITFIND 다운로드 건너뛰기")
+            logger.info("📅 오늘은 목요일이 아님 - ITFIND 다운로드 건너뛰기")
 
         # 4. 이메일 전송 (모드에 따라 수신인 결정)
         logger.info("4단계: 이메일 전송 시작")
@@ -194,7 +198,7 @@ def handler(event, context):
         # 4-1. iCloud Drive에 전자신문 PDF 업로드 (로컬 전용, 함수 내부에서 예외 처리)
         upload_to_icloud(processed_pdf_path)
 
-        # 4-2. ITFIND iCloud Drive 업로드 (로컬 전용, 수요일만)
+        # 4-2. ITFIND iCloud Drive 업로드 (로컬 전용, 목요일만)
         if itfind_pdf_path and itfind_trend_info:
             upload_itfind_to_icloud(
                 itfind_pdf_path,
